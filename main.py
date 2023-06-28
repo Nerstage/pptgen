@@ -7,41 +7,53 @@ from pptx.util import Inches, Pt
 from hymntext import Hymn
 
 
-def hymn_slide(title, verses):
-    prs = Presentation()
-    title_slide_layout = prs.slide_layouts[0]
-    blank_slide_layout = prs.slide_layouts[6]
-    slide1 = prs.slides.add_slide(title_slide_layout)
-    slide1.shapes.title.text = title
-
+def hymn_slide(title: str, verses: list, hymnal: str = "", hymn_index: int = 0) -> None:
+    prs = Presentation("template.pptx")
+    prs = append_title_slide(prs, title, hymnal=hymnal, hymn_index=hymn_index)
     for v in verses:
-        verse_slide = prs.slides.add_slide(blank_slide_layout)
-        left = top = width = height = Inches(1)
-        txBox = verse_slide.shapes.add_textbox(left, top, width, height)
-        tf = txBox.text_frame
-        p = tf.add_paragraph()
-        p.text = v
-        p.font.size = Pt(20)
-
+        prs = append_word_slide(prs, v)
     prs.save("test.pptx")
 
 
-def slidehw():
-    prs = Presentation()
+def append_title_slide(
+    prs: Presentation, title: str, hymnal: str = "", hymn_index: int = 0
+) -> Presentation:
     title_slide_layout = prs.slide_layouts[0]
     slide = prs.slides.add_slide(title_slide_layout)
-    title = slide.shapes.title
-    subtitle = slide.placeholders[1]
+    slide.shapes.title.text = title
+    if hymnal != "":
+        if hymn_index != 0:
+            subtitle = hymnal + " #" + str(hymn_index)
+        else:
+            subtitle = hymnal
+        slide.placeholders[1].text = subtitle
 
-    title.text = "Hello, World"
-    subtitle.text = "python-pptx was here!"
+    return prs
 
-    prs.save("test.pptx")
+
+def append_word_slide(
+    prs: Presentation,
+    words: str,
+    left: float = 1,
+    top: float = 1,
+    width: float = 1,
+    height: float = 1,
+) -> Presentation:
+    blank_slide_layout = prs.slide_layouts[6]
+    slide = prs.slides.add_slide(blank_slide_layout)
+    txBox = slide.shapes.add_textbox(
+        Inches(left), Inches(top), Inches(width), Inches(height)
+    )
+    tf = txBox.text_frame
+    p = tf.add_paragraph()
+    p.text = words
+    p.font.size = Pt(20)
+    return prs
 
 
 def main():
-    test = Hymn("O for a Thousand", "57.txt")
-    hymn_slide(test.title, test.verses)
+    test = Hymn("O for a Thousand", "57.txt", "UMH", 57)
+    hymn_slide(test.title, test.verses, test.hymnal, test.hymn_index)
 
 
 if __name__ == "__main__":

@@ -1,7 +1,11 @@
 class Hymn:
-    def __init__(self, title: str, file: str) -> None:
+    def __init__(
+        self, title: str, file: str, hymnal: str = "", hymn_index: int = 0
+    ) -> None:
         self.title = title
         self.file = file
+        self.hymnal = hymnal
+        self.hymn_index = hymn_index
         self.create_verses()
 
     def get_num_verses(self):
