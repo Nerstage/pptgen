@@ -52,7 +52,7 @@ def append_word_slide(
 
 
 def main():
-    test = Hymn("O for a Thousand", "57.txt", "UMH", 57)
+    test = Hymn("O for a Thousand", "UMH", 57)
     hymn_slide(test.title, test.verses, test.hymnal, test.hymn_index)
 
 

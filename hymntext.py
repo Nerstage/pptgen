@@ -1,6 +1,10 @@
+import requests
+from bs4 import BeautifulSoup
+
+
 class Hymn:
     def __init__(
-        self, title: str, file: str, hymnal: str = "", hymn_index: int = 0
+        self, title: str, hymnal: str = "", hymn_index: int = 0, file: str = None
     ) -> None:
         self.title = title
         self.file = file
@@ -13,6 +17,9 @@ class Hymn:
         return lines.count("") + 1
 
     def create_verses(self):
+        if self.file is None:
+            lines = scrape_hymn(self.hymnal, self.hymn_index)
+            self.file = "words/test.txt"
         lines = read_hymn(self.file)
         self.verses = [""]
         curr_verse = 0
@@ -35,8 +42,20 @@ def read_hymn(file: str) -> list:
     return lines
 
 
+def scrape_hymn(hymnal: str, hymn_index: int):
+    url = f"https://hymnary.org/hymn/{hymnal}/{hymn_index}"
+    page = requests.get(url)
+    soup = BeautifulSoup(page.content, "html.parser")
+    full_text = soup.find(id="text")
+    line_text = full_text.find_all("p")
+    with open("words/test.txt", "w") as f:
+        for line in line_text:
+            f.write(line.text)
+            f.write("\n\n")
+
+
 def main():
-    test = Hymn("O for a Thousand", "57.txt")
+    test = Hymn("O for a Thousand", "UMH", 368)
     print(test.title)
     print(test.verses)
 
