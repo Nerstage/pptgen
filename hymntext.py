@@ -20,26 +20,52 @@ class Hymn:
         if self.file is None:
             lines = scrape_hymn(self.hymnal, self.hymn_index)
             self.file = "words/test.txt"
-        lines = read_hymn(self.file)
-        self.verses = [""]
-        curr_verse = 0
-        for line in lines:
-            if line == "":
-                curr_verse = curr_verse + 1
-                self.verses.append("")
-            else:
-                if self.verses[curr_verse] == "":
-                    self.verses[curr_verse] = line
-                else:
-                    self.verses[curr_verse] = self.verses[curr_verse] + "\n" + line
+        self.verses, self.refrain, self.order = read_hymn(self.file)
 
 
 def read_hymn(file: str) -> list:
-    lines = []
+    verses = []
+    refrain = ""
+    order = []
     with open(file, "r") as f:
-        for line in f:
-            lines.append(line.strip())
-    return lines
+        lines = f.readlines()
+        current_section = ""
+        is_verse = False
+        verse_num = 0
+        for line in lines:
+            line = line.strip()
+            if line.startswith("Refrain:") or line.strip("\t") == "(Refrain)":
+                if current_section:
+                    if is_verse:
+                        verses.append(current_section.strip("\t"))
+                        order.append(verse_num)
+                    else:
+                        refrain = current_section.strip("\t")
+                        order.append("refrain")
+                is_verse = False
+                continue
+            elif line and line[0].isdigit():
+                if current_section:
+                    if is_verse:
+                        verses.append(current_section.strip("\t"))
+                        order.append(verse_num)
+                    else:
+                        refrain = current_section.strip("\t")
+                        order.append("refrain")
+                verse_num = int(line[0])
+                current_section = line[2:]
+                is_verse = True
+            else:
+                current_section += "\n" + line.strip("\t")
+            # print(current_section)
+        if current_section:
+            if is_verse:
+                verses.append(current_section.strip("\t"))
+                order.append(verse_num)
+            else:
+                refrain = current_section.strip("\t")
+                order.append("refrain")
+        return verses, refrain, order
 
 
 def scrape_hymn(hymnal: str, hymn_index: int):
@@ -50,14 +76,20 @@ def scrape_hymn(hymnal: str, hymn_index: int):
     line_text = full_text.find_all("p")
     with open("words/test.txt", "w") as f:
         for line in line_text:
-            f.write(line.text)
-            f.write("\n\n")
+            f.write(line.text + "\n")
 
 
 def main():
-    test = Hymn("O for a Thousand", "UMH", 368)
+    test = Hymn("O for a Thousand", "UMH", 116)
     print(test.title)
-    print(test.verses)
+    num = 1
+    for verse in test.verses:
+        print(num)
+        num += 1
+        print(verse)
+    print("Refrain")
+    print(test.refrain)
+    print(test.order)
 
 
 if __name__ == "__main__":
