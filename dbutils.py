@@ -2,10 +2,11 @@ import sqlite3
 
 default_db = "hymns.db"
 
+
 def db_setup(db: str = default_db):
     with sqlite3.connect(default_db) as conn:
         cursor = conn.cursor()
-        
+
         cursor.execute("PRAGMA foreign_keys = ON")
         query = """CREATE TABLE IF NOT EXISTS services (
                 service_date TEXT NOT NULL,
@@ -32,7 +33,7 @@ def db_setup(db: str = default_db):
                 hymnal_id TEXT,
                 song_id INTEGER,
                 service_id INTEGER,
-                position TEXT,
+                position INTEGER,
                 PRIMARY KEY (hymnal_id, song_id, service_id),
                 FOREIGN KEY(hymnal_id) REFERENCES hymnal(hymnal_id),
                 FOREIGN KEY(song_id) REFERENCES songs(rowid),
@@ -54,35 +55,90 @@ def db_setup(db: str = default_db):
         cursor.execute(query)
         conn.commit()
 
-def add_song(verse: str = "", chorus: str = "", bridge: str = "", db: str = default_db) -> None:
+
+def add_song(
+    title: str,
+    verse: str = "",
+    chorus: str = "",
+    bridge: str = "",
+    db: str = default_db,
+) -> None:
     with sqlite3.connect(db) as conn:
         cursor = conn.cursor()
-        query = f"INSERT INTO songs VALUES ('{verse}', '{chorus}', '{bridge}')"
+        query = f"INSERT INTO songs (title, verse, chorus, bridge)\
+              VALUES ('{title}', '{verse}', '{chorus}', '{bridge}')"
         cursor.execute(query)
         conn.commit()
         res = cursor.execute("select * from songs")
         print(res.fetchall())
-        
-def add_hymnal(code: str, title: str, db: str = default_db) -> None:
+
+
+def add_hymnal(hymnal_id: str, full_title: str, db: str = default_db) -> None:
     with sqlite3.connect(db) as conn:
         cursor = conn.cursor()
-        query = f"INSERT INTO hymnals VALUES ('{code}', '{title}')"
+        query = f"INSERT INTO hymnals (hymnal_id, full_title)\
+              VALUES ('{hymnal_id}', '{full_title}')"
         cursor.execute(query)
         conn.commit()
         res = cursor.execute("select * from hymnals")
         print(res.fetchall())
 
-def add_service(service_date: str, service_type: str, event: str, db: str = default_db) -> None:
+
+def add_service(
+    service_date: str, service_type: str, event: str = "", db: str = default_db
+) -> None:
     with sqlite3.connect(db) as conn:
         cursor = conn.cursor()
-        query = f"INSERT INTO services VALUES ('{service_date}', '{service_type}', '{event}')"
+        query = f"INSERT INTO services (service_date, service_type, event)\
+              VALUES ('{service_date}', '{service_type}', '{event}')"
         cursor.execute(query)
         conn.commit()
         res = cursor.execute("select * from services")
         print(res.fetchall())
 
+
+def add_selection(
+    hymnal_id: str,
+    song_id: int,
+    service_id: int,
+    position: int = 0,
+    db: str = default_db,
+) -> None:
+    with sqlite3.connect(db) as conn:
+        cursor = conn.cursor()
+        cursor.execute("PRAGMA foreign_keys = ON")
+        query = f"INSERT INTO selections (hymnal_id, song_id, service_id, position)\
+              VALUES ('{hymnal_id}', '{song_id}', '{service_id}', '{position}')"
+        try:
+            cursor.execute(query)
+        except sqlite3.OperationalError:
+            print("Foreign Key Missing!")
+        conn.commit()
+        res = cursor.execute("select * from selections")
+        print(res.fetchall())
+
+
+def add_arrangement(
+    hymnal_id: str,
+    song_id: int,
+    number: int,
+    order_str: str,
+    title: str,
+    db: str = default_db,
+) -> None:
+    with sqlite3.connect(db) as conn:
+        cursor = conn.cursor()
+        # cursor.execute("PRAGMA foreign_keys = ON")
+        query = f"INSERT INTO arrangements (hymnal_id, song_id, number, order_str, title)\
+              VALUES ('{hymnal_id}', '{song_id}', '{number}', '{order_str}', '{title}')"
+        try:
+            cursor.execute(query)
+        except sqlite3.OperationalError:
+            print("Foreign Key Missing!")
+        conn.commit()
+        res = cursor.execute("select * from arrangements")
+        print(res.fetchall())
+
+
 if __name__ == "__main__":
     db_setup()
-    #add_song(chorus="this is a test chorus", verse="some verses would go here")
-    #add_hymnal(code="UMH", title="United Methodist Hymnal")
-    add_service(service_date = "07/08/2022", service_type = "Sunday Morning", event = "None")
