@@ -1,15 +1,17 @@
 import sqlite3
 
-def db_setup():
-    with sqlite3.connect("hymns.db") as conn:
+default_db = "hymns.db"
+
+def db_setup(db: str = default_db):
+    with sqlite3.connect(default_db) as conn:
         cursor = conn.cursor()
         
         cursor.execute("PRAGMA foreign_keys = ON")
         query = """CREATE TABLE IF NOT EXISTS services (
-            services_id INTEGER PRIMARY KEY,
-            service_date TEXT NOT NULL,
-            type NOT NULL,
-            event TEXT) WITHOUT ROWID;"""
+                service_date TEXT NOT NULL,
+                service_type NOT NULL,
+                event TEXT
+                );"""
         cursor.execute(query)
 
         query = """ CREATE TABLE IF NOT EXISTS songs (
@@ -20,13 +22,11 @@ def db_setup():
                 );"""
         cursor.execute(query)
 
-
         query = """CREATE TABLE IF NOT EXISTS hymnals(
                 hymnal_id TEXT PRIMARY KEY,
                 full_title TEXT
                 ) WITHOUT ROWID;"""
         cursor.execute(query)
-
 
         query = """ CREATE TABLE IF NOT EXISTS selections (
                 hymnal_id TEXT,
@@ -36,7 +36,7 @@ def db_setup():
                 PRIMARY KEY (hymnal_id, song_id, service_id),
                 FOREIGN KEY(hymnal_id) REFERENCES hymnal(hymnal_id),
                 FOREIGN KEY(song_id) REFERENCES songs(rowid),
-                FOREIGN KEY(service_id) REFERENCES service(service_id)
+                FOREIGN KEY(service_id) REFERENCES service(rowid)
                 );"""
         cursor.execute(query)
 
@@ -54,8 +54,8 @@ def db_setup():
         cursor.execute(query)
         conn.commit()
 
-def add_song(verse: str = "", chorus: str = "", bridge: str = "") -> None:
-    with sqlite3.connect("hymns.db") as conn:
+def add_song(verse: str = "", chorus: str = "", bridge: str = "", db: str = default_db) -> None:
+    with sqlite3.connect(db) as conn:
         cursor = conn.cursor()
         query = f"INSERT INTO songs VALUES ('{verse}', '{chorus}', '{bridge}')"
         cursor.execute(query)
@@ -63,5 +63,26 @@ def add_song(verse: str = "", chorus: str = "", bridge: str = "") -> None:
         res = cursor.execute("select * from songs")
         print(res.fetchall())
         
+def add_hymnal(code: str, title: str, db: str = default_db) -> None:
+    with sqlite3.connect(db) as conn:
+        cursor = conn.cursor()
+        query = f"INSERT INTO hymnals VALUES ('{code}', '{title}')"
+        cursor.execute(query)
+        conn.commit()
+        res = cursor.execute("select * from hymnals")
+        print(res.fetchall())
+
+def add_service(service_date: str, service_type: str, event: str, db: str = default_db) -> None:
+    with sqlite3.connect(db) as conn:
+        cursor = conn.cursor()
+        query = f"INSERT INTO services VALUES ('{service_date}', '{service_type}', '{event}')"
+        cursor.execute(query)
+        conn.commit()
+        res = cursor.execute("select * from services")
+        print(res.fetchall())
+
 if __name__ == "__main__":
-    add_song(chorus="this is a test chorus", verse="some verses would go here")
+    db_setup()
+    #add_song(chorus="this is a test chorus", verse="some verses would go here")
+    #add_hymnal(code="UMH", title="United Methodist Hymnal")
+    add_service(service_date = "07/08/2022", service_type = "Sunday Morning", event = "None")
