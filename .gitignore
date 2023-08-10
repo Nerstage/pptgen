@@ -168,3 +168,5 @@ cython_debug/
 test.pptx
 .vscode
 words/
+music.txt
+hymns.db

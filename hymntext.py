@@ -18,7 +18,7 @@ class Hymn:
 
     def create_verses(self):
         if self.file is None:
-            lines = scrape_hymn(self.hymnal, self.hymn_index)
+            scrape_hymn(self.hymnal, self.hymn_index)
             self.file = "words/test.txt"
         self.verses, self.refrain, self.order = read_hymn(self.file)
 
@@ -35,37 +35,37 @@ def read_hymn(file: str) -> list:
         for line in lines:
             line = line.strip()
             if line.startswith("Refrain:") or line.strip("\t") == "(Refrain)":
+                order.append("refrain")
                 if current_section:
                     if is_verse:
                         verses.append(current_section.strip("\t"))
-                        order.append(verse_num)
-                    else:
-                        refrain = current_section.strip("\t")
-                        order.append("refrain")
+                        current_section = ""
+                    # else:
+                    #     refrain = current_section.strip("\t")
                 is_verse = False
                 continue
             elif line and line[0].isdigit():
+                verse_num = int(line[0])
+                order.append(verse_num)
                 if current_section:
                     if is_verse:
                         verses.append(current_section.strip("\t"))
-                        order.append(verse_num)
                     else:
                         refrain = current_section.strip("\t")
-                        order.append("refrain")
-                verse_num = int(line[0])
                 current_section = line[2:]
                 is_verse = True
             else:
-                current_section += "\n" + line.strip("\t")
+                if current_section:
+                    current_section += "\n" + line.strip("\t")
+                else:
+                    current_section = line.strip("\t")
             # print(current_section)
         if current_section:
             if is_verse:
                 verses.append(current_section.strip("\t"))
-                order.append(verse_num)
             else:
                 refrain = current_section.strip("\t")
-                order.append("refrain")
-        return verses, refrain, order
+    return verses, refrain, order
 
 
 def scrape_hymn(hymnal: str, hymn_index: int):
@@ -80,7 +80,7 @@ def scrape_hymn(hymnal: str, hymn_index: int):
 
 
 def main():
-    test = Hymn("O for a Thousand", "UMH", 116)
+    test = Hymn("O for a Thousand", "UMH", 98, file="travel.txt")
     print(test.title)
     num = 1
     for verse in test.verses:

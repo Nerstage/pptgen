@@ -1,5 +1,14 @@
 import logging
+import dbutils
+from typing import TypedDict
 
+class Music(TypedDict):
+    date: str
+    title: str
+    key: str
+    hymnal: str
+    num: int
+    tag: str
 
 def parse_music(text):
     entries = list()
@@ -68,7 +77,7 @@ def parse_music(text):
                 tag = "Postlude"
             elif line.find("Communion") != -1:
                 tag = "Communion"
-        entry = {
+        entry: Music = {
             "date": date,
             "title": title,
             "key": key,
@@ -77,7 +86,6 @@ def parse_music(text):
             "tag": tag,
         }
         entries.append(entry)
-
     return entries
 
 
